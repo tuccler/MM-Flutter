@@ -1,0 +1,11 @@
+[build]
+# Main Python executable path (auto-detected)
+main_script = "MangaManager/main.py"
+
+[target.exe]
+# Output file name
+filename = "MangaManager.exe"
+
+[hook-pyinstaller]
+# Collect all data files for the zip archives and images
+collect_data_files = true
