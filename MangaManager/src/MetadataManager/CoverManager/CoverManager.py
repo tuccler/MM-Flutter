@@ -223,13 +223,21 @@ class CoverManager(tkinter.Toplevel):
         side_panel_control.pack(side="right", expand=False, fill="y")
         ctr_btn = Frame(self)
         ctr_btn.pack()
-        #
-        #
-        tree = self.tree = Treeview(side_panel_control, columns=("Filename", "type"), show="headings", height=8)
-        tree.column("#1")
+        # Create treeview with columns for filename, volume, chapter, and type
+        tree = self.tree = Treeview(side_panel_control, 
+                                   columns=("Filename", "Volume", "Chapter", "Type"), 
+                                   show="headings", height=8)
+        # Configure column widths
+        tree.column("#1", minwidth=150, width=250)  # Filename
+        tree.column("#2", minwidth=30, width=40)     # Volume
+        tree.column("#3", minwidth=30, width=40)     # Chapter
+        tree.column("#4", anchor=CENTER, width=80)   # Type
+        
+        # Set column headers
         tree.heading("#1", text="Filename")
-        tree.column("#2", anchor=CENTER, width=80)
-        tree.heading("#2", text="Type")
+        tree.heading("#2", text="Volume")
+        tree.heading("#3", text="Chapter")
+        tree.heading("#4", text="Type")
         tree.pack(expand=True, fill="y", pady=(80, 0), padx=30, side="top")
         action_buttons = Frame(side_panel_control)
         action_buttons.pack(ipadx=20, ipady=20, pady=(0, 80), fill="x", padx=30)
@@ -280,7 +288,17 @@ class CoverManager(tkinter.Toplevel):
         self.last_folder = ""
         self.selected_frames: list[tuple[ComicFrame, str]] = []
 
-        for i, cinfo in enumerate(self._super.loaded_cinfo_list):
+        # Sort the loaded_cinfo_list by volume and chapter numbers
+        def get_sort_key(cinfo):
+            """Generate a sort key for a LoadedComicInfo object"""
+            vol = cinfo.cinfo_object.volume if cinfo.cinfo_object.volume is not None else -1
+            chap = cinfo.cinfo_object.number if cinfo.cinfo_object.number is not None else 0
+            # Return tuple of (volume, chapter) as the sort key
+            return (vol, chap)
+
+        sorted_cinfo_list = sorted(self._super.loaded_cinfo_list, key=get_sort_key)
+
+        for i, cinfo in enumerate(sorted_cinfo_list):
             # create a ComicFrame for each LoadedComicInfo object
             comic_frame = ComicFrame(self.scrolled_widget, cinfo)
 
@@ -308,7 +326,11 @@ class CoverManager(tkinter.Toplevel):
                 frame.backcover_canvas.configure(highlightbackground="#f0f0f0", highlightcolor="white")
 
         else:
-            node = self.tree.insert('', 'end', text="1", values=(frame.loaded_cinfo.file_name, pos))
+            # Get volume and chapter for display
+            vol = cinfo.cinfo_object.volume if cinfo.cinfo_object.volume is not None else ""
+            chap = str(cinfo.cinfo_object.number) if cinfo.cinfo_object.number is not None else ""
+            
+            node = self.tree.insert('', 'end', text="1", values=(frame.loaded_cinfo.file_name, vol, chap, pos))
             self.tree_dict[node] = {"cinfo": frame.loaded_cinfo, "type": pos}
             self.selected_frames.append((frame, pos))
             if pos == "front":
